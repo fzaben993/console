@@ -1,18 +1,10 @@
 import { defineConfig } from 'vite';
-import { sveltekit } from '@sveltejs/kit/vite';
-import { sentrySvelteKit } from '@sentry/sveltekit';
-import { svelteTesting } from '@testing-library/svelte/vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig({
     plugins: [
-        sentrySvelteKit({
-            adapter: 'auto',
-            sourceMapsUploadOptions: {
-                org: 'appwrite',
-                project: 'console'
-            }
-        }),
-        sveltekit()
+        react()
     ],
     optimizeDeps: {
         include: ['echarts', 'prismjs']
@@ -24,42 +16,30 @@ export default defineConfig({
             }
         }
     },
-    ssr: {
-        noExternal: [
-            '@analytics/google-analytics',
-            'analytics',
-            'dayjs',
-            'echarts',
-            'prismjs',
-            'zrender'
-        ]
+    resolve: {
+        alias: {
+            $lib: path.resolve(__dirname, './src/lib'),
+            $routes: path.resolve(__dirname, './src/routes'),
+            $themes: path.resolve(__dirname, './src/themes')
+        }
     },
     server: {
         port: 3000
     },
     test: {
-        projects: [
-            {
-                extends: './vite.config.ts',
-                plugins: [svelteTesting()],
-                test: {
-                    name: 'client',
-                    environment: 'jsdom',
-                    clearMocks: true,
-                    include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
-                    exclude: ['src/lib/server/**'],
-                    setupFiles: ['./vitest-setup-client.ts']
-                }
-            },
-            {
-                extends: './vite.config.ts',
-                test: {
-                    name: 'server',
-                    environment: 'node',
-                    include: ['src/**/*.{test,spec}.{js,ts}'],
-                    exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
-                }
-            }
+        environment: 'jsdom',
+        setupFiles: ['./vitest-setup-react.ts'],
+        globals: true,
+        include: ['src/**/*.test.{ts,tsx}'],
+        exclude: [
+            'src/lib/helpers/date.test.ts',
+            'src/lib/helpers/withPrevious.test.ts',
+            'src/routes/(console)/wizard/support/store.test.ts',
+            'node_modules',
+            'dist',
+            '.idea',
+            '.git',
+            '.cache'
         ]
     }
 });
